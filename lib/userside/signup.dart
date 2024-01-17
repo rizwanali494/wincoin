@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:wincoin/userside/onboarding.dart';
 
 class singup extends StatefulWidget {
@@ -10,10 +11,31 @@ class singup extends StatefulWidget {
 }
 
 class _singupState extends State<singup> {
+  TextEditingController FirstName = TextEditingController();
+  TextEditingController SecondName = TextEditingController();
+  TextEditingController Email = TextEditingController();
+  TextEditingController Birth = TextEditingController();
+  TextEditingController Country = TextEditingController();
+
+
+  birthdaypicker({required BuildContext context}) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      lastDate: DateTime.now(),
+      firstDate: DateTime(2015),
+      initialDate: DateTime.now(),
+    );
+    if (pickedDate == null) return;
+    Birth.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenheight = MediaQuery.of(context).size.height;
     final screenwidth = MediaQuery.of(context).size.width;
+
+
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -51,7 +73,10 @@ class _singupState extends State<singup> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                controller: FirstName,
                 decoration: InputDecoration(
+                  labelStyle: TextStyle(color: Colors.white),
+
                   hintText: 'First Name',
                   hintStyle:
                       const TextStyle(color: Color.fromRGBO(68, 68, 68, 1)),
@@ -78,6 +103,7 @@ class _singupState extends State<singup> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                controller: SecondName,
                 decoration: InputDecoration(
                   hintText: 'Last Name',
                   hintStyle:
@@ -105,6 +131,7 @@ class _singupState extends State<singup> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                controller: Email,
                 decoration: InputDecoration(
                   hintText: 'Email',
                   hintStyle:
@@ -132,10 +159,13 @@ class _singupState extends State<singup> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                readOnly: true,
+                controller: Birth ,
                 decoration: InputDecoration(
                   hintText: 'Birth',
+
                   hintStyle:
-                      const TextStyle(color: Color.fromRGBO(68, 68, 68, 1)),
+                      const TextStyle(color: Color.fromRGBO(68, 68, 68, 1),),
                   enabledBorder: OutlineInputBorder(
                     borderSide:
                         const BorderSide(color: Color.fromRGBO(68, 68, 68, 1)),
@@ -150,6 +180,7 @@ class _singupState extends State<singup> {
                       vertical: 15.0, horizontal: 10.0),
                 ),
                 textAlign: TextAlign.center,
+                onTap: () => birthdaypicker(context: context),
               ),
             ),
             SizedBox(
@@ -159,6 +190,7 @@ class _singupState extends State<singup> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                controller: Country,
                 decoration: InputDecoration(
                   hintText: 'Country',
                   hintStyle:
@@ -188,7 +220,7 @@ class _singupState extends State<singup> {
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const createaccount()));
+                          builder: (context) =>  createaccount(FirstName: FirstName.text,SecondName: SecondName.text, Email: Email.text, Birth: Birth.text, Country: Country.text,)));
                 },
                 child: Container(
                   height: screenheight * 0.075,
@@ -221,17 +253,32 @@ class _singupState extends State<singup> {
 }
 
 class createaccount extends StatefulWidget {
-  const createaccount({super.key});
+  final String FirstName;
+  final String SecondName;
+  final String Email;
+  final String Birth;
+  final String Country;
+  const createaccount( {Key? key, required this.FirstName,required this.SecondName, required this.Email, required this.Birth, required this.Country}): super(key: key);
 
   @override
   State<createaccount> createState() => _createaccountState();
 }
 
 class _createaccountState extends State<createaccount> {
+   TextEditingController ConfirmEmail = TextEditingController();
+   TextEditingController Password = TextEditingController();
+   @override
+   void initState() {
+     super.initState();
+     // Set the initial value for the email TextField
+     ConfirmEmail.text = widget.Email;
+   }
   @override
   Widget build(BuildContext context) {
     final screenheight = MediaQuery.of(context).size.height;
     final screenwidth = MediaQuery.of(context).size.width;
+    print(widget.FirstName);
+    print(widget.Birth);
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -269,6 +316,7 @@ class _createaccountState extends State<createaccount> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                controller: ConfirmEmail,
                 decoration: InputDecoration(
                   hintText: 'Email',
                   hintStyle:
@@ -296,6 +344,7 @@ class _createaccountState extends State<createaccount> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                controller: Password,
                 decoration: InputDecoration(
                   hintText: 'Password',
                   hintStyle:
