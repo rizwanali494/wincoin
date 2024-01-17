@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "81797051591",
+    "project_id": "wincoin-e7b39",
+    "storage_bucket": "wincoin-e7b39.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:81797051591:android:aaea52705694b17be7fae2",
+        "android_client_info": {
+          "package_name": "com.example.wincoin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9VGH88r8ceMCYeVMe-XGGFP1yKsuEErs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
