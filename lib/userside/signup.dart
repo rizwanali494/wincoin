@@ -1,7 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:wincoin/user_functions/Firebase_functions.dart';
+import 'package:wincoin/userside/homepage.dart';
+import 'package:wincoin/userside/login.dart';
+
 import 'package:wincoin/userside/onboarding.dart';
+
+
 
 class singup extends StatefulWidget {
   const singup({super.key});
@@ -16,7 +24,6 @@ class _singupState extends State<singup> {
   TextEditingController Email = TextEditingController();
   TextEditingController Birth = TextEditingController();
   TextEditingController Country = TextEditingController();
-
 
   birthdaypicker({required BuildContext context}) async {
     DateTime? pickedDate = await showDatePicker(
@@ -33,8 +40,6 @@ class _singupState extends State<singup> {
   Widget build(BuildContext context) {
     final screenheight = MediaQuery.of(context).size.height;
     final screenwidth = MediaQuery.of(context).size.width;
-
-
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -73,10 +78,10 @@ class _singupState extends State<singup> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                style: const TextStyle(color: Colors.white),
                 controller: FirstName,
                 decoration: InputDecoration(
-                  labelStyle: TextStyle(color: Colors.white),
-
+                  labelStyle: const TextStyle(color: Colors.white),
                   hintText: 'First Name',
                   hintStyle:
                       const TextStyle(color: Color.fromRGBO(68, 68, 68, 1)),
@@ -103,6 +108,7 @@ class _singupState extends State<singup> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                style: const TextStyle(color: Colors.white),
                 controller: SecondName,
                 decoration: InputDecoration(
                   hintText: 'Last Name',
@@ -131,6 +137,7 @@ class _singupState extends State<singup> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                style: const TextStyle(color: Colors.white),
                 controller: Email,
                 decoration: InputDecoration(
                   hintText: 'Email',
@@ -159,13 +166,14 @@ class _singupState extends State<singup> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                style: const TextStyle(color: Colors.white),
                 readOnly: true,
-                controller: Birth ,
+                controller: Birth,
                 decoration: InputDecoration(
                   hintText: 'Birth',
-
-                  hintStyle:
-                      const TextStyle(color: Color.fromRGBO(68, 68, 68, 1),),
+                  hintStyle: const TextStyle(
+                    color: Color.fromRGBO(68, 68, 68, 1),
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderSide:
                         const BorderSide(color: Color.fromRGBO(68, 68, 68, 1)),
@@ -190,6 +198,7 @@ class _singupState extends State<singup> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                style: const TextStyle(color: Colors.white),
                 controller: Country,
                 decoration: InputDecoration(
                   hintText: 'Country',
@@ -220,7 +229,13 @@ class _singupState extends State<singup> {
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>  createaccount(FirstName: FirstName.text,SecondName: SecondName.text, Email: Email.text, Birth: Birth.text, Country: Country.text,)));
+                          builder: (context) => createaccount(
+                                FirstName: FirstName.text,
+                                SecondName: SecondName.text,
+                                Email: Email.text,
+                                Birth: Birth.text,
+                                Country: Country.text,
+                              )));
                 },
                 child: Container(
                   height: screenheight * 0.075,
@@ -258,21 +273,60 @@ class createaccount extends StatefulWidget {
   final String Email;
   final String Birth;
   final String Country;
-  const createaccount( {Key? key, required this.FirstName,required this.SecondName, required this.Email, required this.Birth, required this.Country}): super(key: key);
+  const createaccount(
+      {Key? key,
+      required this.FirstName,
+      required this.SecondName,
+      required this.Email,
+      required this.Birth,
+      required this.Country})
+      : super(key: key);
 
   @override
   State<createaccount> createState() => _createaccountState();
 }
 
 class _createaccountState extends State<createaccount> {
-   TextEditingController ConfirmEmail = TextEditingController();
-   TextEditingController Password = TextEditingController();
-   @override
-   void initState() {
-     super.initState();
-     // Set the initial value for the email TextField
-     ConfirmEmail.text = widget.Email;
-   }
+  final FirebaseService _firebaseService = FirebaseService();
+  TextEditingController ConfirmEmail = TextEditingController();
+  TextEditingController Password = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    ConfirmEmail.text = widget.Email;
+  }
+
+  Future<void> signUpAndUploadData() async {
+    try {
+      EasyLoading.show(status: 'Loading...');
+
+
+
+      User? user = await _firebaseService.signUpWithEmailAndPassword(
+          widget.Email, Password.text);
+
+      if (user != null) {
+        await _firebaseService.uploadUserData(
+          uid: user.uid,
+          firstName: widget.FirstName,
+          lastName: widget.SecondName,
+          email: widget.Email,
+          birth: widget.Birth,
+          country: widget.Country,
+        );
+
+        EasyLoading.showSuccess('Account created successfully');
+        // Navigate to the next screen or perform other actions
+      }
+    } catch (error) {
+      print("Error during signup: $error");
+
+      // Display the raw error message on EasyLoading
+
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenheight = MediaQuery.of(context).size.height;
@@ -316,6 +370,7 @@ class _createaccountState extends State<createaccount> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                style: const TextStyle(color: Colors.white),
                 controller: ConfirmEmail,
                 decoration: InputDecoration(
                   hintText: 'Email',
@@ -344,6 +399,7 @@ class _createaccountState extends State<createaccount> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                style: const TextStyle(color: Colors.white),
                 controller: Password,
                 decoration: InputDecoration(
                   hintText: 'Password',
@@ -369,21 +425,24 @@ class _createaccountState extends State<createaccount> {
               height: screenheight * 0.1,
             ),
             Center(
-              child: Container(
-                height: screenheight * 0.075,
-                width: screenwidth * 0.5,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: const Color.fromRGBO(146, 208, 80, 1),
-                        width: 2)),
-                child: Center(
-                  child: Text(
-                    'Create',
-                    style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: screenwidth * 0.08,
-                        fontWeight: FontWeight.w600),
+              child: GestureDetector(
+                onTap: signUpAndUploadData,
+                child: Container(
+                  height: screenheight * 0.075,
+                  width: screenwidth * 0.5,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: const Color.fromRGBO(146, 208, 80, 1),
+                          width: 2)),
+                  child: Center(
+                    child: Text(
+                      'Create',
+                      style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: screenwidth * 0.08,
+                          fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
               ),

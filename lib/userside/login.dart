@@ -1,7 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:wincoin/userside/homepage.dart';
 import 'package:wincoin/userside/onboarding.dart';
+
+import '../user_functions/Firebase_functions.dart';
 
 class login extends StatefulWidget {
   const login({super.key});
@@ -11,6 +15,31 @@ class login extends StatefulWidget {
 }
 
 class _loginState extends State<login> {
+  final FirebaseService _firebaseService = FirebaseService();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+
+  Future<void> loginAndNavigateToHomepage() async {
+    try {
+      EasyLoading.show(status: 'Loading...');
+
+      User? user = await _firebaseService.loginWithEmailAndPassword(
+        emailController.text,
+        passwordController.text,
+      );
+
+      if (user != null) {
+        EasyLoading.showSuccess('LOGGED IN ...');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const homepage()),
+        );
+      }
+    } catch (error) {
+      print("Error during Login: $error");
+      EasyLoading.showError('$error');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final screenheight = MediaQuery.of(context).size.height;
@@ -52,6 +81,8 @@ class _loginState extends State<login> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                style: const TextStyle(color: Colors.white),
+                controller: emailController,
                 decoration: InputDecoration(
                   hintText: 'Email',
                   hintStyle:
@@ -79,6 +110,8 @@ class _loginState extends State<login> {
               padding: EdgeInsets.only(
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
+                style: const TextStyle(color: Colors.white),
+                controller: passwordController,
                 decoration: InputDecoration(
                   hintText: 'Password',
                   hintStyle:
@@ -104,12 +137,7 @@ class _loginState extends State<login> {
             ),
             Center(
               child: GestureDetector(
-                onTap: () {
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const homepage()));
-                },
+                onTap: loginAndNavigateToHomepage,
                 child: Container(
                   height: screenheight * 0.075,
                   width: screenwidth * 0.5,
