@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wincoin/adminside/gfdrawer.dart';
 import 'package:wincoin/userside/homepage.dart';
 import 'package:wincoin/userside/onboarding.dart';
 
@@ -23,24 +24,47 @@ class _loginState extends State<login> {
     try {
       EasyLoading.show(status: 'Loading...');
 
-      User? user = await _firebaseService.loginWithEmailAndPassword(
-        emailController.text,
-        passwordController.text,
-      );
-
-      if (user != null) {
-        EasyLoading.showSuccess('LOGGED IN ...');
+      // Check if the entered email and password match predefined admin credentials
+      if (_isAdmin()) {
+        EasyLoading.showSuccess('Admin logged in...');
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const homepage()),
+          MaterialPageRoute(builder: (context) => const gfdrawer()),
         );
+
+        // Navigate to the admin section or perform other actions for admins
+      } else {
+        // If not admin, proceed with regular user login
+        User? user = await _firebaseService.loginWithEmailAndPassword(
+          emailController.text,
+          passwordController.text,
+        );
+
+        if (user != null) {
+          EasyLoading.showSuccess('User logged in...');
+          // Navigate to the regular user homepage
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const homepage()),
+          );
+        }
       }
     } catch (error) {
       print("Error during Login: $error");
       EasyLoading.showError('$error');
     }
   }
-  @override
+
+  // Function to check if the entered email and password match predefined admin credentials
+  bool _isAdmin() {
+    // Replace these values with your predefined admin email and password
+    const String adminEmail = 'admin@example.com';
+    const String adminPassword = 'adminpassword';
+
+    return emailController.text == adminEmail && passwordController.text == adminPassword;
+  }
+
+    @override
   Widget build(BuildContext context) {
     final screenheight = MediaQuery.of(context).size.height;
     final screenwidth = MediaQuery.of(context).size.width;

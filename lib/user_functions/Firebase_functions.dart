@@ -30,6 +30,10 @@ class FirebaseService {
       return null;
     }
   }
+  bool isAdmin(String email, String password) {
+    // Replace with your predefined admin credentials
+    return email == 'admin@login.com' && password == 'adminpassword';
+  }
 
   Future<void> uploadUserData({
     required String uid,

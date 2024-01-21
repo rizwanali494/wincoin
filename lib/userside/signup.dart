@@ -29,7 +29,7 @@ class _singupState extends State<singup> {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       lastDate: DateTime.now(),
-      firstDate: DateTime(2015),
+      firstDate: DateTime(1900),
       initialDate: DateTime.now(),
     );
     if (pickedDate == null) return;
@@ -226,7 +226,7 @@ class _singupState extends State<singup> {
             Center(
               child: GestureDetector(
                 onTap: () {
-                  Navigator.pushReplacement(
+                  Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => createaccount(
@@ -299,12 +299,16 @@ class _createaccountState extends State<createaccount> {
 
   Future<void> signUpAndUploadData() async {
     try {
+      if (!validateFields()) {
+        return;
+      }
+
       EasyLoading.show(status: 'Loading...');
 
-
-
       User? user = await _firebaseService.signUpWithEmailAndPassword(
-          widget.Email, Password.text);
+        widget.Email,
+        Password.text,
+      );
 
       if (user != null) {
         await _firebaseService.uploadUserData(
@@ -317,14 +321,54 @@ class _createaccountState extends State<createaccount> {
         );
 
         EasyLoading.showSuccess('Account created successfully');
-        // Navigate to the next screen or perform other actions
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => homepage())
+        );
       }
+
     } catch (error) {
       print("Error during signup: $error");
-
-      // Display the raw error message on EasyLoading
-
     }
+  }
+
+  bool validateFields() {
+    if (widget.FirstName.isEmpty ||
+        widget.SecondName.isEmpty ||
+        widget.Email.isEmpty ||
+        widget.Birth.isEmpty ||
+        widget.Country.isEmpty) {
+      EasyLoading.showError('Please fill in all fields');
+      return false;
+    }
+
+    if (!RegExp(r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$')
+        .hasMatch(ConfirmEmail.text)) {
+      EasyLoading.showError('Invalid email format');
+      return false;
+    }
+
+    try {
+      DateTime birthDate = DateFormat('yyyy-MM-dd').parse(widget.Birth);
+      DateTime currentDate = DateTime.now();
+      int age = currentDate.year - birthDate.year;
+
+      if (currentDate.month < birthDate.month ||
+          (currentDate.month == birthDate.month &&
+              currentDate.day < birthDate.day)) {
+        age--;
+      }
+
+      if (age < 18) {
+        EasyLoading.showError('You must be at least 18 years old');
+        return false;
+      }
+    } catch (e) {
+      EasyLoading.showError('Invalid birth date format');
+      return false;
+    }
+
+    return true;
   }
 
   @override
@@ -344,10 +388,7 @@ class _createaccountState extends State<createaccount> {
               padding: const EdgeInsets.all(15),
               child: GestureDetector(
                 onTap: () {
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const onboarding()));
+                  Navigator.pop(context);
                 },
                 child: const Icon(
                   Icons.arrow_back_ios,
