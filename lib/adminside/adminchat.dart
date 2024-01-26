@@ -1,9 +1,77 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:wincoin/adminside/adminchattest.dart';
 import 'package:wincoin/adminside/gfdrawer.dart';
 
-class adminchat extends StatelessWidget {
+class adminchat extends StatefulWidget {
   const adminchat({super.key});
+
+  @override
+  State<adminchat> createState() => _adminchatState();
+}
+
+class _adminchatState extends State<adminchat> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<String> userIDs = [];
+  Map<String, String> usernames = {};
+  Map<String, String> lastMessageTimestamps = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserIDs();
+  }
+
+  // Fetch user IDs from Firestore
+  Future<void> _fetchUserIDs() async {
+    try {
+      QuerySnapshot usersSnapshot =
+          await _firestore.collectionGroup('messages').get();
+      Set<String> uniqueUserIDs = <String>{};
+
+      for (QueryDocumentSnapshot doc in usersSnapshot.docs) {
+        String senderUid = doc['senderUid'];
+        if (senderUid.isNotEmpty && senderUid != 'admin') {
+          uniqueUserIDs.add(senderUid);
+          Timestamp timestamp = doc['timestamp'];
+          lastMessageTimestamps[senderUid] = timestamp.toDate().toString();
+        }
+      }
+
+      // Fetch usernames for each user ID
+      await _fetchUsernames(uniqueUserIDs);
+
+      setState(() {
+        userIDs = uniqueUserIDs.toList();
+      });
+    } catch (error) {
+      print("Error fetching user IDs: $error");
+    }
+  }
+
+  // Fetch usernames from Firestore
+  Future<void> _fetchUsernames(Set<String> userIDs) async {
+    try {
+      Map<String, String> usernamesMap = {};
+
+      for (String userID in userIDs) {
+        DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(userID).get();
+        String username = userDoc['username'];
+        if (username.isNotEmpty) {
+          usernamesMap[userID] = username;
+        }
+      }
+
+      setState(() {
+        usernames = usernamesMap;
+      });
+    } catch (error) {
+      print("Error fetching usernames: $error");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,92 +101,108 @@ class adminchat extends StatelessWidget {
             ),
             Center(
               child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: 6,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Padding(
-                      padding: EdgeInsets.only(
-                          top: screenheight * 0.02,
-                          left: screenwidth * 0.1,
-                          right: screenwidth * 0.1),
-                      child: Container(
-                        height: screenheight * 0.09,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(20)),
-                            border: Border.all(
-                                color: const Color.fromRGBO(68, 68, 68, 1))),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Icon(
-                                Icons.person_outline,
-                                color: const Color.fromRGBO(68, 68, 68, 1),
-                                size: screenwidth * 0.1,
-                              ),
-                              Container(
-                                height: screenheight * 0.035,
-                                width: screenwidth * 0.3,
-                                decoration: BoxDecoration(
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(15)),
-                                    border: Border.all(
-                                        color: const Color.fromRGBO(
-                                            68, 68, 68, 1))),
-                                child: Center(
-                                  child: Text(
-                                    'username',
-                                    style: GoogleFonts.inter(
-                                        color: const Color.fromRGBO(
-                                            68, 68, 68, 1)),
-                                  ),
-                                ),
-                              ),
-                              Column(
-                                children: [
-                                  Text(
-                                    'Date',
-                                    style: GoogleFonts.inter(
-                                      color:
-                                          const Color.fromRGBO(68, 68, 68, 1),
-                                    ),
-                                  ),
-                                  Text(
-                                    '30.12 12:45',
-                                    style: GoogleFonts.inter(
-                                      color:
-                                          const Color.fromRGBO(68, 68, 68, 1),
-                                    ),
-                                  )
-                                ],
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const adminstartchat()));
-                                },
-                                child: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: Colors.white,
-                                ),
-                              )
-                            ],
-                          ),
+                shrinkWrap: true,
+                itemCount: userIDs.length,
+                itemBuilder: (BuildContext context, int index) {
+                  String userID = userIDs[index];
+                  String username = usernames[userID] ?? 'Unknown';
+                  String lastMessageTimestamp =
+                      lastMessageTimestamps[userID] ?? '';
+
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      top: screenheight * 0.02,
+                      left: screenwidth * 0.1,
+                      right: screenwidth * 0.1,
+                    ),
+                    child: Container(
+                      height: screenheight * 0.09,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(20)),
+                        border: Border.all(
+                          color: const Color.fromRGBO(68, 68, 68, 1),
                         ),
                       ),
-                    );
-                  }),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Icon(
+                              Icons.person_outline,
+                              color: const Color.fromRGBO(68, 68, 68, 1),
+                              size: screenwidth * 0.1,
+                            ),
+                            Container(
+                              height: screenheight * 0.035,
+                              width: screenwidth * 0.3,
+                              decoration: BoxDecoration(
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(15)),
+                                border: Border.all(
+                                  color: const Color.fromRGBO(68, 68, 68, 1),
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  username,
+                                  style: GoogleFonts.inter(
+                                    color: const Color.fromRGBO(68, 68, 68, 1),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Column(
+                              children: [
+                                Text(
+                                  'Date',
+                                  style: GoogleFonts.inter(
+                                    color: const Color.fromRGBO(68, 68, 68, 1),
+                                  ),
+                                ),
+                                Text(
+                                  _formatTimestamp(lastMessageTimestamp),
+                                  style: GoogleFonts.inter(
+                                    color: const Color.fromRGBO(68, 68, 68, 1),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AdminChatPage(
+                                        selectedUserID: userIDs[index]),
+                                  ),
+                                );
+                              },
+                              child: const Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.white,
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatTimestamp(String timestamp) {
+    DateTime dateTime = DateTime.parse(timestamp);
+    String formattedDate = DateFormat('dd.MM HH:mm').format(dateTime);
+    return formattedDate;
   }
 }
 

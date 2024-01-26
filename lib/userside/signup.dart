@@ -5,11 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:wincoin/user_functions/Firebase_functions.dart';
 import 'package:wincoin/userside/homepage.dart';
-import 'package:wincoin/userside/login.dart';
-
 import 'package:wincoin/userside/onboarding.dart';
-
-
 
 class singup extends StatefulWidget {
   const singup({super.key});
@@ -24,6 +20,7 @@ class _singupState extends State<singup> {
   TextEditingController Email = TextEditingController();
   TextEditingController Birth = TextEditingController();
   TextEditingController Country = TextEditingController();
+  TextEditingController username = TextEditingController();
 
   birthdaypicker({required BuildContext context}) async {
     DateTime? pickedDate = await showDatePicker(
@@ -167,6 +164,35 @@ class _singupState extends State<singup> {
                   left: screenwidth * 0.1, right: screenwidth * 0.1),
               child: TextField(
                 style: const TextStyle(color: Colors.white),
+                controller: username,
+                decoration: InputDecoration(
+                  hintText: 'username',
+                  hintStyle:
+                      const TextStyle(color: Color.fromRGBO(68, 68, 68, 1)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide:
+                        const BorderSide(color: Color.fromRGBO(68, 68, 68, 1)),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide:
+                        const BorderSide(color: Color.fromRGBO(68, 68, 68, 1)),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      vertical: 15.0, horizontal: 10.0),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            SizedBox(
+              height: screenheight * 0.02,
+            ),
+            Padding(
+              padding: EdgeInsets.only(
+                  left: screenwidth * 0.1, right: screenwidth * 0.1),
+              child: TextField(
+                style: const TextStyle(color: Colors.white),
                 readOnly: true,
                 controller: Birth,
                 decoration: InputDecoration(
@@ -235,6 +261,7 @@ class _singupState extends State<singup> {
                                 Email: Email.text,
                                 Birth: Birth.text,
                                 Country: Country.text,
+                                username: username.text,
                               )));
                 },
                 child: Container(
@@ -272,6 +299,7 @@ class createaccount extends StatefulWidget {
   final String SecondName;
   final String Email;
   final String Birth;
+  final String username;
   final String Country;
   const createaccount(
       {Key? key,
@@ -279,6 +307,7 @@ class createaccount extends StatefulWidget {
       required this.SecondName,
       required this.Email,
       required this.Birth,
+      required this.username,
       required this.Country})
       : super(key: key);
 
@@ -318,15 +347,13 @@ class _createaccountState extends State<createaccount> {
           email: widget.Email,
           birth: widget.Birth,
           country: widget.Country,
+          username: widget.username,
         );
 
         EasyLoading.showSuccess('Account created successfully');
         Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => homepage())
-        );
+            context, MaterialPageRoute(builder: (context) => const homepage()));
       }
-
     } catch (error) {
       print("Error during signup: $error");
     }
