@@ -1,22 +1,19 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:wincoin/userside/homepage.dart';
-import 'package:wincoin/userside/login.dart';
 import 'package:wincoin/userside/onboarding.dart';
 
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-
-  // Initialize controllers before runApp
-
-  runApp(const MyApp());
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((value) => runApp(const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -24,14 +21,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
+    return MaterialApp(
       builder: EasyLoading.init(),
-
       debugShowCheckedModeBanner: false,
-      home: login(),
-
+      home: const onboarding(),
     );
   }
 }
-
-// Rest of your code remains unchanged

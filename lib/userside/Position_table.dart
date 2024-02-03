@@ -1,7 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:wincoin/userside/settings.dart';
 import 'package:wincoin/userside/withdraw.dart';
+
+import '../user_functions/Firebase_functions.dart';
 
 class positiontable extends StatefulWidget {
   const positiontable({super.key});
@@ -11,10 +15,80 @@ class positiontable extends StatefulWidget {
 }
 
 class _positiontableState extends State<positiontable> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<Map<String, dynamic>> withdrawalData = [];
+  late String currentUserUid; // Add this line
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWithdrawalData();
+    _getCurrentUserUid();
+  }
+
+  // Fetch withdrawal data from Firestore
+  Future<void> _fetchWithdrawalData() async {
+    try {
+      QuerySnapshot userSnapshot = await _firestore.collection('users').get();
+
+      setState(() {
+        withdrawalData = userSnapshot.docs
+            .map((DocumentSnapshot doc) => {
+          'uid': doc.id,
+          'withdrawValue': doc['withdrawvalue'] ?? '0',
+        })
+            .toList();
+      });
+    } catch (error) {
+      print("Error fetching withdrawal data: $error");
+    }
+  }
+  Future<void> _getCurrentUserUid() async {
+    try {
+      // Fetch the current user's ID
+      // You may need to adjust this based on your authentication setup
+      // For example, if you are using Firebase Authentication, you can get it like this:
+       User? user = FirebaseAuth.instance.currentUser;
+       currentUserUid = user?.uid ?? '';
+
+    } catch (error) {
+      print("Error getting current user ID: $error");
+    }
+  }
+  String formatNumber(int number) {
+    if (number < 1000) {
+      return '# $number';
+    } else if (number < 1000000) {
+      double result = number / 1000.0;
+      return '# ${result.toStringAsFixed(result.truncateToDouble() == result ? 0 : 1)}K';
+    } else if (number < 1000000000) {
+      double result = number / 1000000.0;
+      return '# ${result.toStringAsFixed(result.truncateToDouble() == result ? 0 : 1)}M';
+    } else if (number < 1000000000000) {
+      double result = number / 1000000000.0;
+      return '# ${result.toStringAsFixed(result.truncateToDouble() == result ? 0 : 1)}B';
+    } else {
+      double result = number / 1000000000000.0;
+      return '# ${result.toStringAsFixed(result.truncateToDouble() == result ? 0 : 1)}T';
+    }
+  }
+
+Future<void> _getwithdrawvalue()async {
+
+  String? withdrawValue = await FirebaseService().getWithdrawValue();
+
+}
+
   @override
   Widget build(BuildContext context) {
     final screenheight = MediaQuery.of(context).size.height;
     final screenwidth = MediaQuery.of(context).size.width;
+    withdrawalData.sort((a, b) => int.parse(b['withdrawValue']).compareTo(int.parse(a['withdrawValue'])));
+    int currentUserIndex =
+    withdrawalData.indexWhere((withdrawal) => withdrawal['uid'] == currentUserUid);
+
+
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -66,13 +140,35 @@ class _positiontableState extends State<positiontable> {
                         },
                         child: Row(
                           children: [
-                            Text(
-                              '0,024',
-                              style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: screenwidth * 0.04),
-                            ),
+                        FutureBuilder<String?>(
+                        future: FirebaseService().getWithdrawValue(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            // If the Future is still running, display a loading indicator
+                            return CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            // If there is an error in the Future, display an error message
+                            return Text('Error: ${snapshot.error}');
+                          } else {
+                            // If the Future is complete and successful, display the withdrawValue
+                            String? withdrawValue = snapshot.data;
+
+                            if (withdrawValue != null) {
+                              return Text(
+                                '$withdrawValue',
+                                style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: screenwidth * 0.04),
+                              );
+                            } else {
+                              // If withdrawValue is null, display a message
+                              return Text('Withdraw Value not available');
+                            }
+                          }
+                        },
+                      ),
+
                             const SizedBox(
                               width: 4,
                             ),
@@ -105,7 +201,7 @@ class _positiontableState extends State<positiontable> {
                               width: 3)),
                       child: Center(
                         child: Text(
-                          '2 025 663',
+                          (currentUserIndex + 1).toString(),
                           style: GoogleFonts.inter(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
@@ -158,8 +254,11 @@ class _positiontableState extends State<positiontable> {
                         ),
                         ListView.builder(
                             shrinkWrap: true,
-                            itemCount: 10,
+                            itemCount: withdrawalData.length,
                             itemBuilder: (context, index) {
+                              Map<String, dynamic> withdrawal = withdrawalData[index];
+                              String uid = withdrawal['uid'];
+                              String withdrawValue = withdrawal['withdrawValue'];
                               return Container(
                                 child: Column(
                                   children: [
@@ -201,7 +300,7 @@ class _positiontableState extends State<positiontable> {
                                           Row(
                                             children: [
                                               Text(
-                                                '10 000',
+                                                '$withdrawValue',
                                                 style: GoogleFonts.inter(
                                                     color: Colors.white,
                                                     fontWeight:
@@ -257,7 +356,7 @@ class _positiontableState extends State<positiontable> {
                     borderRadius: BorderRadius.circular(10)),
                 child: Center(
                   child: Text(
-                    '# 2,03M',
+                    formatNumber( (currentUserIndex + 1),),
                     style: GoogleFonts.inter(
                         color: Colors.white, fontSize: screenwidth * 0.03),
                   ),

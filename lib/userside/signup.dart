@@ -347,7 +347,7 @@ class _createaccountState extends State<createaccount> {
           email: widget.Email,
           birth: widget.Birth,
           country: widget.Country,
-          username: widget.username,
+          username: widget.username, withdrawvalue: '0',
         );
 
         EasyLoading.showSuccess('Account created successfully');
